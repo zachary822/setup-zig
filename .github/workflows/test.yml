@@ -1,0 +1,28 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-13, windows-latest]
+        version: ["0.13.0", "0.17.0", master]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: zig
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+
+      - name: Use zig in a later step
+        shell: bash
+        run: |
+          zig version
+          test "$(zig version)" = "${{ steps.zig.outputs.version }}"

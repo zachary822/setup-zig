@@ -1,0 +1,35 @@
+name: Setup Zig
+description: Download a Zig compiler release for the runner's OS and architecture and add it to the PATH.
+author: Zachary Juang
+branding:
+  icon: zap
+  color: orange
+
+inputs:
+  version:
+    description: >
+      The Zig version to install, as listed in https://ziglang.org/download/index.json
+      (for example "0.15.2"). Use "master" for the latest development build.
+    required: true
+  index-url:
+    description: The URL of the Zig download index.
+    required: false
+    default: https://ziglang.org/download/index.json
+
+outputs:
+  version:
+    description: The exact Zig version that was installed.
+    value: ${{ steps.install.outputs.version }}
+  zig-dir:
+    description: The directory that contains the zig executable.
+    value: ${{ steps.install.outputs.zig-dir }}
+
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_INDEX_URL: ${{ inputs.index-url }}
+      run: '"$GITHUB_ACTION_PATH/install.sh"'
