@@ -9,7 +9,7 @@ The action reads [index.json](https://ziglang.org/download/index.json), selects 
 ```yaml
 steps:
   - uses: actions/checkout@v4
-  - uses: zacharyjuang/setup-zig@v1
+  - uses: zachary822/setup-zig@v1
     with:
       version: 0.15.2
   - run: zig build test
