@@ -33,6 +33,9 @@ command -v jq > /dev/null || fail "jq is required but was not found on PATH"
 index="$(curl --fail --silent --show-error --location --retry 3 "$index_url")" \
   || fail "Could not download the Zig index from $index_url"
 
+# jq on Windows can print CRLF line endings.
+jq() { command jq "$@" | tr -d '\r'; }
+
 jq -e --arg v "$version" 'has($v)' <<< "$index" > /dev/null \
   || fail "Zig version '$version' is not in $index_url. Available: $(jq -r 'keys_unsorted | join(", ")' <<< "$index")"
 
@@ -62,9 +65,11 @@ else
     || fail "Could not download $tarball"
 
   if command -v sha256sum > /dev/null; then
-    actual="$(sha256sum "$archive" | cut -d' ' -f1)"
+    # Read from stdin: with a path that contains backslashes (Windows), sha256sum
+    # adds a leading "\" escape to the output.
+    actual="$(sha256sum < "$archive" | cut -d' ' -f1)"
   else
-    actual="$(shasum -a 256 "$archive" | cut -d' ' -f1)"
+    actual="$(shasum -a 256 < "$archive" | cut -d' ' -f1)"
   fi
   [[ "$actual" == "$shasum" ]] || fail "Checksum mismatch for $tarball: expected $shasum, got $actual"
 
