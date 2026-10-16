@@ -15,21 +15,47 @@ inputs:
     description: The URL of the Zig download index.
     required: false
     default: https://ziglang.org/download/index.json
+  cache:
+    description: >
+      Keep the Zig install in the GitHub Actions cache, so that later runs do not download it again.
+      Set to "false" to disable.
+    required: false
+    default: "true"
 
 outputs:
   version:
     description: The exact Zig version that was installed.
-    value: ${{ steps.install.outputs.version }}
+    value: ${{ steps.resolve.outputs.version }}
   zig-dir:
     description: The directory that contains the zig executable.
     value: ${{ steps.install.outputs.zig-dir }}
+  cache-hit:
+    description: '"true" if Zig came from the GitHub Actions cache.'
+    value: ${{ steps.cache.outputs.cache-hit == 'true' }}
 
 runs:
   using: composite
   steps:
+    - id: resolve
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_INDEX_URL: ${{ inputs.index-url }}
+      run: '"$GITHUB_ACTION_PATH/resolve.sh"'
+
+    - id: cache
+      if: inputs.cache == 'true'
+      uses: actions/cache@v6
+      with:
+        path: ${{ steps.resolve.outputs.cache-path }}
+        key: ${{ steps.resolve.outputs.cache-key }}
+
     - id: install
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
         INPUT_INDEX_URL: ${{ inputs.index-url }}
+        ZIG_VERSION: ${{ steps.resolve.outputs.version }}
+        ZIG_INSTALL_DIR: ${{ steps.resolve.outputs.install-dir }}
+        ZIG_INDEX_FILE: ${{ steps.resolve.outputs.index-file }}
       run: '"$GITHUB_ACTION_PATH/install.sh"'

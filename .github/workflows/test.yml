@@ -26,3 +26,25 @@ jobs:
         run: |
           zig version
           test "$(zig version)" = "${{ steps.zig.outputs.version }}"
+
+  # The "test" job saves the cache, so this job must restore it.
+  cache:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: zig
+        uses: ./
+        with:
+          version: "0.13.0"
+
+      - name: Zig comes from the cache
+        shell: bash
+        run: |
+          zig version
+          test "${{ steps.zig.outputs.cache-hit }}" = true

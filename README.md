@@ -4,6 +4,8 @@ A GitHub Action that installs a Zig compiler and adds it to the `PATH` for later
 
 The action reads [index.json](https://ziglang.org/download/index.json), selects the build for the runner OS and architecture, does a check of the SHA-256 checksum, and extracts it into the runner tool cache.
 
+The action also keeps the extracted Zig in the GitHub Actions cache. Later runs restore it from the cache and do not download it again. The cache key contains the exact version, so `master` gets a new key when a new development build is available. For a release version such as `0.15.2`, a cache hit does not download `index.json`.
+
 ## Usage
 
 ```yaml
@@ -21,6 +23,7 @@ steps:
 | ----------- | -------- | ------------------------------------------- | ------------------------------------------------------------- |
 | `version`   | yes      |                                             | A key from `index.json`, for example `0.15.2` or `master`.    |
 | `index-url` | no       | `https://ziglang.org/download/index.json`   | The download index to use, for example a mirror.              |
+| `cache`     | no       | `true`                                      | Keep Zig in the GitHub Actions cache. Set to `false` to disable. |
 
 ## Outputs
 
@@ -28,6 +31,7 @@ steps:
 | --------- | ------------------------------------------------------------------ |
 | `version` | The exact installed version (resolves `master` to a dev version).  |
 | `zig-dir` | The directory that contains the `zig` executable.                  |
+| `cache-hit` | `true` if Zig came from the GitHub Actions cache, else `false`.  |
 
 ## Supported runners
 
